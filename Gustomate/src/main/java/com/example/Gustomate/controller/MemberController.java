@@ -27,6 +27,41 @@ public class MemberController {
         memberService.addRegion(loginUser.getUsername(), regionId);
     }
 
+    /**
+     * 내 동네 인증
+     *
+     * @param userDetails         security 에 저장된 유저 정보
+     * @param userPositionRequest 현재 유저 위치 정보
+     * @param userRegionId        유저 동네 ID
+     */
+    @PostMapping("/locations/{userRegionId}/auth")
+    public void authenticateRegion(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody UserPositionRequest userPositionRequest,
+            @PathVariable Long userRegionId
+
+    ) {
+
+        // 위도 경도 -> 지번 주소
+        ApiAddressResponse addressDto = kakaoMapClient.getAddressByPosition(
+                userPositionRequest.getLatitude(),
+                userPositionRequest.getLongitude());
+
+        userService.authenticateUserRegion(
+                userDetails.getUsername(),
+                convertAddressResponseToRegionDto(addressDto),
+                userRegionId);
+
+    }
+
+    private RegionDto convertAddressResponseToRegionDto(ApiAddressResponse addressDto) {
+        return RegionDto.builder()
+                .state(addressDto.getRegion1DepthName())
+                .city(addressDto.getRegion2DepthName())
+                .town(addressDto.getRegion3DepthName())
+                .build();
+    }
+
 
     // 회원가입 페이지 출력 요청
     @GetMapping("/member/save")
