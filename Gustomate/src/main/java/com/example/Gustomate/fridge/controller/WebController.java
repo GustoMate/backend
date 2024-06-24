@@ -8,6 +8,6 @@ public class WebController {
 
     @GetMapping("/fridge/view/ingredients")
     public String ingredientsPage() {
-        return "ingredient";  // static 폴더 내의 ingredients.html 파일을 가리키는 것
+        return "ingredients";  // static 폴더 내의 ingredients.html 파일을 가리키는 것
     }
 }

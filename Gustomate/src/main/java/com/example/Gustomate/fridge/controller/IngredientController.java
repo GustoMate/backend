@@ -17,34 +17,33 @@ public class IngredientController {
     }
 
     @PostMapping
-    public ResponseEntity<Ingredient> addIngredient(@RequestBody Ingredient ingredient) {
-        Ingredient savedIngredient = ingredientService.addIngredient(ingredient);
+    public ResponseEntity<Ingredient> addIngredient(@ModelAttribute Ingredient ingredient, @RequestParam String memberEmail) {
+        Ingredient savedIngredient = ingredientService.addIngredient(memberEmail, ingredient);
         return ResponseEntity.ok(savedIngredient);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Ingredient> updateIngredient(@PathVariable Long id, @RequestBody Ingredient ingredientDetails) {
-        Ingredient updatedIngredient = ingredientService.updateIngredient(id, ingredientDetails);
+    @PostMapping("/update")
+    public ResponseEntity<Ingredient> updateIngredient(@RequestParam Long id, @ModelAttribute Ingredient ingredientDetails, @RequestParam String memberEmail) {
+        Ingredient updatedIngredient = ingredientService.updateIngredient(id, memberEmail, ingredientDetails);
         return updatedIngredient != null ?
                 ResponseEntity.ok(updatedIngredient) :
                 ResponseEntity.notFound().build();
     }
 
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteIngredient(@PathVariable Long id) {
-        ingredientService.deleteIngredient(id);
+    @PostMapping("/delete")
+    public ResponseEntity<Void> deleteIngredient(@RequestParam Long id, @RequestParam String memberEmail) {
+        ingredientService.deleteIngredient(id, memberEmail);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping
-    public ResponseEntity<List<Ingredient>> getAllIngredients() {
-        return ResponseEntity.ok(ingredientService.getAllIngredients());
+    public ResponseEntity<List<Ingredient>> getAllIngredients(@RequestParam String memberEmail) {
+        return ResponseEntity.ok(ingredientService.getAllIngredients(memberEmail));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Ingredient> getIngredientById(@PathVariable Long id) {
-        return ingredientService.getIngredientById(id)
+    @GetMapping("/getById")
+    public ResponseEntity<Ingredient> getIngredientById(@RequestParam Long id, @RequestParam String memberEmail) {
+        return ingredientService.getIngredientById(id, memberEmail)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }

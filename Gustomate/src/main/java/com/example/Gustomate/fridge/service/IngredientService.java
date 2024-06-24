@@ -2,51 +2,64 @@ package com.example.Gustomate.fridge.service;
 
 import com.example.Gustomate.fridge.model.Ingredient;
 import com.example.Gustomate.fridge.repository.IngredientRepository;
+import com.example.Gustomate.repository.MemberRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 import java.util.Optional;
 
 @Service
-@Transactional
 public class IngredientService {
     private final IngredientRepository ingredientRepository;
+    private final MemberRepository memberRepository;
 
-    public IngredientService(IngredientRepository ingredientRepository) {
+    public IngredientService(IngredientRepository ingredientRepository, MemberRepository memberRepository) {
         this.ingredientRepository = ingredientRepository;
+        this.memberRepository = memberRepository;
     }
 
-    //재료 추가
-    public Ingredient addIngredient(Ingredient ingredient) {
+    public Ingredient addIngredient(String memberEmail, Ingredient ingredient) {
+        Long userId = memberRepository.findByMemberEmail(memberEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"))
+                .getId();
+        ingredient.setUserId(userId);
         return ingredientRepository.save(ingredient);
     }
 
-    //재료 삭제
-    public void deleteIngredient(Long id) {
-        ingredientRepository.deleteById(id);
+    public Ingredient updateIngredient(Long id, String memberEmail, Ingredient ingredientDetails) {
+        Long userId = memberRepository.findByMemberEmail(memberEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"))
+                .getId();
+        return ingredientRepository.findByIdAndUserId(id, userId)
+                .map(ingredient -> {
+                    ingredient.setName(ingredientDetails.getName());
+                    ingredient.setQuantity(ingredientDetails.getQuantity());
+                    ingredient.setUserId(userId);
+                    ingredient.setExpiryDate(ingredientDetails.getExpiryDate());
+                    ingredient.setPurchaseDate(ingredientDetails.getPurchaseDate());
+                    return ingredientRepository.save(ingredient);
+                })
+                .orElse(null);
     }
 
-    //전체 재료 얻기
-    public List<Ingredient> getAllIngredients() {
-        return ingredientRepository.findAll();
-    }
-    
-    //특정 재료 얻기
-    public Optional<Ingredient> getIngredientById(Long id) {
-        return ingredientRepository.findById(id);
+    public void deleteIngredient(Long id, String memberEmail) {
+        Long userId = memberRepository.findByMemberEmail(memberEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"))
+                .getId();
+        ingredientRepository.deleteByIdAndUserId(id, userId);
     }
 
-    //재료 수정하기
-    public Ingredient updateIngredient(Long id, Ingredient ingredientDetails) {
-        Optional<Ingredient> ingredientOptional = ingredientRepository.findById(id);
-        if (ingredientOptional.isPresent()) {
-            Ingredient existingIngredient = ingredientOptional.get();
-            existingIngredient.setName(ingredientDetails.getName());
-            existingIngredient.setQuantity(ingredientDetails.getQuantity());
-            existingIngredient.setExpiryDate(ingredientDetails.getExpiryDate());
-            return ingredientRepository.save(existingIngredient);
-        }
-        return null;
+    public List<Ingredient> getAllIngredients(String memberEmail) {
+        Long userId = memberRepository.findByMemberEmail(memberEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"))
+                .getId();
+        return ingredientRepository.findAllByUserId(userId);
     }
 
+    public Optional<Ingredient> getIngredientById(Long id, String memberEmail) {
+        Long userId = memberRepository.findByMemberEmail(memberEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"))
+                .getId();
+        return ingredientRepository.findByIdAndUserId(id, userId);
+    }
 }

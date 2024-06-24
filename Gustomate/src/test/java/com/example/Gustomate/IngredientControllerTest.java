@@ -13,7 +13,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
-import java.util.Arrays;
 import java.util.Collections;
 
 import static org.hamcrest.Matchers.*;
@@ -21,6 +20,7 @@ import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 
 @WebMvcTest(IngredientController.class)
 public class IngredientControllerTest {
@@ -38,17 +38,20 @@ public class IngredientControllerTest {
 
     @BeforeEach
     void setUp() {
-        ingredient = new Ingredient(1L, "Milk", 2, LocalDate.of(2023, 12, 25), LocalDate.of(2023, 6, 1));
+        ingredient = new Ingredient(1L, "Milk", 2, 1L, LocalDate.of(2023, 12, 25), LocalDate.of(2023, 6, 1));
     }
 
     @Test
     void shouldAddIngredient() throws Exception {
+        String memberEmail = "jihyeon";
+
         // 서비스가 해당 재료를 정상적으로 추가하고 반환하도록 설정
-        given(ingredientService.addIngredient(any())).willReturn(ingredient);
+        given(ingredientService.addIngredient(eq(memberEmail), any(Ingredient.class))).willReturn(ingredient);
 
         // MockMvc를 사용하여 POST 요청을 보내고 JSON 응답 검증
         mockMvc.perform(post("/fridge/ingredients")
                         .contentType(MediaType.APPLICATION_JSON)
+                        .param("memberEmail", memberEmail)
                         .content(objectMapper.writeValueAsString(ingredient)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name", is("Milk")));
@@ -56,8 +59,12 @@ public class IngredientControllerTest {
 
     @Test
     void shouldGetAllIngredients() throws Exception {
-        given(ingredientService.getAllIngredients()).willReturn(Collections.singletonList(ingredient));
-        mockMvc.perform(get("/fridge/ingredients"))
+        String memberEmail = "jihyeon@example.com";
+
+        given(ingredientService.getAllIngredients(eq(memberEmail))).willReturn(Collections.singletonList(ingredient));
+
+        mockMvc.perform(get("/fridge/ingredients")
+                        .param("memberEmail", memberEmail))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].name", is("Milk")));

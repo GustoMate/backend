@@ -20,6 +20,8 @@ public class Ingredient {
     private Long id;
     private String name;
     private int quantity;
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
     private LocalDate expiryDate;
     private LocalDate purchaseDate;
 }
